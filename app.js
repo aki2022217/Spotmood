@@ -1,6 +1,6 @@
 // --- Spotify 認証設定 ---
-const clientId = "8a2cddf270454c288e7a18a42184a8d4"; // Spotify ダッシュボードで取得
-const redirectUri = "https://aki2022217.github.io/spotmood/"; // GitHub Pages URL
+const clientId = "8a2cddf270454c288e7a18a42184a8d4"; 
+const redirectUri = "https://aki2022217.github.io/spotmood/"; 
 const scopes = "user-top-read user-library-read playlist-modify-public";
 
 // アクセストークン取得関数
@@ -11,13 +11,13 @@ function getSpotifyToken() {
     return params.get("access_token");
   } else {
     const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-    window.location = authUrl; // 認証画面に飛ぶ
+    window.location = authUrl;
   }
 }
 
 let spotifyToken = getSpotifyToken();
 
-// surveyDataの初期化
+// surveyData 初期化
 let surveyData = {
   mood: null,
   activity: [],
@@ -29,48 +29,32 @@ let surveyData = {
   playlistLength: { tracks: null, minutes: null },
 };
 
-// --- ページ遷移処理 ---
-// ページ1：気分
-document.getElementById("next1").addEventListener("click", function() {
-  const mood = document.querySelector('input[name="mood"]:checked');
-  if(mood) surveyData.mood = parseInt(mood.value);
-  document.getElementById("page1").style.display = "none";
-  document.getElementById("page2").style.display = "block";
-});
+// --- ページ遷移 ---
+function setupNext(pageId, nextId, name, isMultiple=false) {
+  document.getElementById(nextId).addEventListener("click", function() {
+    if(name){
+      if(isMultiple){
+        const items = document.querySelectorAll(`input[name="${name}"]:checked`);
+        surveyData[name] = Array.from(items).map(i=>i.value);
+      } else {
+        const item = document.querySelector(`input[name="${name}"]:checked`);
+        if(item) surveyData[name] = parseInt(item.value);
+      }
+    }
+    document.getElementById(pageId).style.display = "none";
+    const nextPage = document.getElementById("page" + (parseInt(pageId.replace("page",""))+1));
+    if(nextPage) nextPage.style.display = "block";
+  });
+}
 
-// ページ2：活動
-document.getElementById("next2").addEventListener("click", function() {
-  const activities = document.querySelectorAll('input[name="activity"]:checked');
-  surveyData.activity = Array.from(activities).map(a => a.value);
-  document.getElementById("page2").style.display = "none";
-  document.getElementById("page3").style.display = "block";
-});
+// ページ設定
+setupNext("page1","next1","mood");
+setupNext("page2","next2","activity",true);
+setupNext("page3","next3","bodyCondition");
+setupNext("page4","next4","motivation");
+setupNext("page5","next5","concentration");
 
-// ページ3：体の調子
-document.getElementById("next3").addEventListener("click", function() {
-  const val = document.querySelector('input[name="bodyCondition"]:checked');
-  if(val) surveyData.bodyCondition = parseInt(val.value);
-  document.getElementById("page3").style.display = "none";
-  document.getElementById("page4").style.display = "block";
-});
-
-// ページ4：やる気
-document.getElementById("next4").addEventListener("click", function() {
-  const val = document.querySelector('input[name="motivation"]:checked');
-  if(val) surveyData.motivation = parseInt(val.value);
-  document.getElementById("page4").style.display = "none";
-  document.getElementById("page5").style.display = "block";
-});
-
-// ページ5：集中度
-document.getElementById("next5").addEventListener("click", function() {
-  const val = document.querySelector('input[name="concentration"]:checked');
-  if(val) surveyData.concentration = parseInt(val.value);
-  document.getElementById("page5").style.display = "none";
-  document.getElementById("page6").style.display = "block";
-});
-
-// ページ6：参照データ
+// ページ6：データ参照
 document.getElementById("next6").addEventListener("click", function() {
   surveyData.useHistory = document.getElementById("useHistory").checked;
   surveyData.useFavorites = document.getElementById("useFavorites").checked;
@@ -78,39 +62,77 @@ document.getElementById("next6").addEventListener("click", function() {
   document.getElementById("page7").style.display = "block";
 });
 
-// --- Spotify API 関数 ---
-// トップ再生履歴取得
-async function getTopTracks() {
-  if(!spotifyToken) return;
-  const response = await fetch("https://api.spotify.com/v1/me/top/tracks?limit=5", {
-    headers: {
-      "Authorization": `Bearer ${spotifyToken}`
-    }
+// --- Spotify データ取得 ---
+async function getTopTracks(limit=5){
+  if(!spotifyToken) return [];
+  const resp = await fetch(`https://api.spotify.com/v1/me/top/tracks?limit=${limit}`, {
+    headers: { "Authorization": `Bearer ${spotifyToken}` }
   });
-  const data = await response.json();
-  console.log("ユーザーの再生履歴トップ5:", data.items.map(item => item.name + " - " + item.artists[0].name));
+  const data = await resp.json();
+  return data.items.map(i=>i.uri);
 }
 
-// お気に入りアーティスト取得
-async function getTopArtists() {
-  if(!spotifyToken) return;
-  const response = await fetch("https://api.spotify.com/v1/me/top/artists?limit=5", {
-    headers: {
-      "Authorization": `Bearer ${spotifyToken}`
-    }
+async function getTopArtistsTracks(limitPerArtist=1){
+  if(!spotifyToken) return [];
+  const resp = await fetch(`https://api.spotify.com/v1/me/top/artists?limit=5`, {
+    headers: { "Authorization": `Bearer ${spotifyToken}` }
   });
-  const data = await response.json();
-  console.log("ユーザーのお気に入りアーティストトップ5:", data.items.map(item => item.name));
+  const data = await resp.json();
+  let uris = [];
+  for(const a of data.items){
+    const topResp = await fetch(`https://api.spotify.com/v1/artists/${a.id}/top-tracks?market=JP`, {
+      headers: { "Authorization": `Bearer ${spotifyToken}` }
+    });
+    const topData = await topResp.json();
+    if(topData.tracks.length>0) uris.push(topData.tracks[0].uri);
+  }
+  return uris;
 }
 
-// ページ7：プレイリスト長さ
-document.getElementById("finish").addEventListener("click", function() {
+// --- プレイリスト作成 ---
+async function createPlaylist(){
+  if(!spotifyToken) return;
+  
+  // ユーザーID取得
+  const meResp = await fetch("https://api.spotify.com/v1/me", { headers: { "Authorization": `Bearer ${spotifyToken}` } });
+  const meData = await meResp.json();
+  const userId = meData.id;
+
+  // 曲取得
+  let trackUris = [];
+  if(surveyData.useHistory) trackUris = trackUris.concat(await getTopTracks());
+  if(surveyData.useFavorites) trackUris = trackUris.concat(await getTopArtistsTracks());
+
+  // 曲数制限
+  if(surveyData.playlistLength.tracks) trackUris = trackUris.slice(0, parseInt(surveyData.playlistLength.tracks));
+
+  // プレイリスト作成
+  const playlistResp = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+    method:"POST",
+    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name: `Spotmoodプレイリスト (${new Date().toLocaleDateString()})`,
+      description: "Spotmoodが作ったプレイリスト",
+      public:true
+    })
+  });
+  const playlistData = await playlistResp.json();
+
+  // 曲追加
+  await fetch(`https://api.spotify.com/v1/playlists/${playlistData.id}/tracks`, {
+    method:"POST",
+    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type":"application/json" },
+    body: JSON.stringify({ uris: trackUris })
+  });
+
+  alert("プレイリスト作成完了！Spotifyで確認してね！");
+}
+
+// ページ7：プレイリスト作成ボタン
+document.getElementById("finish").addEventListener("click", function(){
   surveyData.playlistLength.tracks = document.getElementById("playlistTracks").value;
   surveyData.playlistLength.minutes = document.getElementById("playlistMinutes").value;
 
-  // Spotify API データ取得
-  if(surveyData.useHistory) getTopTracks();
-  if(surveyData.useFavorites) getTopArtists();
-
-  alert("アンケート完了！\n" + JSON.stringify(surveyData));
+  createPlaylist();
+  console.log("アンケートデータ:", surveyData);
 });
