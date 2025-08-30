@@ -1,6 +1,6 @@
 // --- Spotify 認証設定 ---
-const clientId = "あなたのClient ID"; // Spotify ダッシュボードで取得
-const redirectUri = "https://ユーザー名.github.io/spotmood/"; // GitHub Pages URL
+const clientId = 8a2cddf270454c288e7a18a42184a8d4; // Spotify ダッシュボードで取得
+const redirectUri = "https://aki2022217.github.io/spotmood/"; // GitHub Pages URL
 const scopes = "user-top-read user-library-read playlist-modify-public";
 
 // アクセストークン取得関数
