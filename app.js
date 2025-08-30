@@ -1,3 +1,23 @@
+// --- Spotify 認証設定 ---
+const clientId = "あなたのClient ID"; // Spotify ダッシュボードで取得
+const redirectUri = "https://ユーザー名.github.io/spotmood/"; // GitHub Pages URL
+const scopes = "user-top-read user-library-read playlist-modify-public";
+
+// アクセストークン取得関数
+function getSpotifyToken() {
+  const hash = window.location.hash;
+  if (hash) {
+    const params = new URLSearchParams(hash.substring(1));
+    return params.get("access_token");
+  } else {
+    const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+    window.location = authUrl; // 認証画面に飛ぶ
+  }
+}
+
+let spotifyToken = getSpotifyToken();
+
+
 // surveyDataの初期化
 let surveyData = {
   mood: null,
