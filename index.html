@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- ページ1：気分 -->
   <div id="page1" class="page">
     <h2>今の気分はどうですか？（5段階）</h2>
     <label><input type="radio" name="mood" value="5"> 最高</label>
@@ -15,13 +16,14 @@
     <label><input type="radio" name="mood" value="1"> 悪い</label>
     <br>
     <button id="next1">次の質問へ</button>
-    </div>
-    
-    <div id="page2" class="page" style="display:none;">
-      <h2>今何をしていますか？（複数選択可）</h2>
-      <label><input type="checkbox" name="activity" value="仕事"> 仕事</label>
-      <label><input type="checkbox" name="activity" value="勉強"> 勉強</label>
-      <label><input type="checkbox" name="activity" value="運動"> 運動</label>
+  </div>
+
+  <!-- ページ2：活動 -->
+  <div id="page2" class="page" style="display:none;">
+    <h2>今何をしていますか？（複数選択可）</h2>
+    <label><input type="checkbox" name="activity" value="仕事"> 仕事</label>
+    <label><input type="checkbox" name="activity" value="勉強"> 勉強</label>
+    <label><input type="checkbox" name="activity" value="運動"> 運動</label>
     <label><input type="checkbox" name="activity" value="通学・通勤"> 通学・通勤</label>
     <label><input type="checkbox" name="activity" value="食事"> 食事</label>
     <label><input type="checkbox" name="activity" value="睡眠"> 睡眠</label>
@@ -29,8 +31,9 @@
     <label><input type="checkbox" name="activity" value="その他"> その他</label>
     <br>
     <button id="next2">次の質問へ</button>
-    </div>
+  </div>
 
+  <!-- ページ3：体の調子 -->
   <div id="page3" class="page" style="display:none;">
     <h2>今の体の調子はどうですか？（5段階）</h2>
     <label><input type="radio" name="bodyCondition" value="5"> とても良い</label>
@@ -40,8 +43,9 @@
     <label><input type="radio" name="bodyCondition" value="1"> 悪い</label>
     <br>
     <button id="next3">次の質問へ</button>
-    </div>
+  </div>
 
+  <!-- ページ4：やる気 -->
   <div id="page4" class="page" style="display:none;">
     <h2>今のやる気はどのくらいですか？（5段階）</h2>
     <label><input type="radio" name="motivation" value="5"> とても高い</label>
@@ -51,8 +55,9 @@
     <label><input type="radio" name="motivation" value="1"> とても低い</label>
     <br>
     <button id="next4">次の質問へ</button>
-    </div>
+  </div>
 
+  <!-- ページ5：集中度 -->
   <div id="page5" class="page" style="display:none;">
     <h2>今どれくらい集中していますか / したいですか？（5段階）</h2>
     <label><input type="radio" name="concentration" value="5"> とても集中できている/したい</label>
@@ -62,22 +67,24 @@
     <label><input type="radio" name="concentration" value="1"> 全く集中できていない/したい</label>
     <br>
     <button id="next5">次の質問へ</button>
-    </div>
+  </div>
 
+  <!-- ページ6：データ参照 -->
   <div id="page6" class="page" style="display:none;">
     <h2>参照するデータを選んでください</h2>
     <label><input type="checkbox" id="useHistory"> 再生履歴を参考にする</label><br>
     <label><input type="checkbox" id="useFavorites"> お気に入りアーティストを参考にする</label><br>
     <button id="next6">次の質問へ</button>
-    </div>
+  </div>
 
+  <!-- ページ7：プレイリスト作成 -->
   <div id="page7" class="page" style="display:none;">
     <h2>このプレイリストに何曲欲しいですか？</h2>
     <input type="text" id="playlistTracks" placeholder="例：10"><br>
     <h2>何分くらいがいいですか？</h2>
     <input type="text" id="playlistMinutes" placeholder="例：30"><br>
     <button id="finish">プレイリスト作成</button>
-    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

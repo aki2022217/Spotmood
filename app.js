@@ -1,6 +1,6 @@
 // --- Spotify 認証設定 ---
-const clientId = "8a2cddf270454c288e7a18a42184a8d4"; 
-const redirectUri = "https://aki2022217.github.io/spotmood/"; 
+const clientId = "8a2cddf270454c288e7a18a42184a8d4"; // Spotify ダッシュボードで取得
+const redirectUri = "https://aki2022217.github.io/spotmood/"; // GitHub Pages URL
 const scopes = "user-top-read user-library-read playlist-modify-public";
 
 // アクセストークン取得関数
@@ -11,7 +11,7 @@ function getSpotifyToken() {
     return params.get("access_token");
   } else {
     const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-    window.location = authUrl;
+    window.location = authUrl; // 認証画面に飛ぶ
   }
 }
 
@@ -35,7 +35,7 @@ function setupNext(pageId, nextId, name, isMultiple=false) {
     if(name){
       if(isMultiple){
         const items = document.querySelectorAll(`input[name="${name}"]:checked`);
-        surveyData[name] = Array.from(items).map(i=>i.value);
+        surveyData[name] = Array.from(items).map(i => i.value);
       } else {
         const item = document.querySelector(`input[name="${name}"]:checked`);
         if(item) surveyData[name] = parseInt(item.value);
@@ -64,34 +64,55 @@ document.getElementById("next6").addEventListener("click", function() {
 
 // --- Spotify データ取得 ---
 async function getTopTracks(limit=5){
-  if(!spotifyToken) return [];
-  const resp = await fetch(`https://api.spotify.com/v1/me/top/tracks?limit=${limit}`, {
-    headers: { "Authorization": `Bearer ${spotifyToken}` }
-  });
-  const data = await resp.json();
-  return data.items.map(i=>i.uri);
+  if(!spotifyToken) {
+    alert("Spotifyへのログインが必要です！");
+    return [];
+  }
+  try {
+    const resp = await fetch(`https://api.spotify.com/v1/me/top/tracks?limit=${limit}`, {
+      headers: { "Authorization": `Bearer ${spotifyToken}` }
+    });
+    if (!resp.ok) throw new Error('Failed to fetch top tracks');
+    const data = await resp.json();
+    return data.items.map(i => i.uri);
+  } catch (error) {
+    console.error('Error fetching top tracks:', error);
+    return [];
+  }
 }
 
 async function getTopArtistsTracks(limitPerArtist=1){
-  if(!spotifyToken) return [];
-  const resp = await fetch(`https://api.spotify.com/v1/me/top/artists?limit=5`, {
-    headers: { "Authorization": `Bearer ${spotifyToken}` }
-  });
-  const data = await resp.json();
-  let uris = [];
-  for(const a of data.items){
-    const topResp = await fetch(`https://api.spotify.com/v1/artists/${a.id}/top-tracks?market=JP`, {
+  if(!spotifyToken) {
+    alert("Spotifyへのログインが必要です！");
+    return [];
+  }
+  try {
+    const resp = await fetch(`https://api.spotify.com/v1/me/top/artists?limit=5`, {
       headers: { "Authorization": `Bearer ${spotifyToken}` }
     });
-    const topData = await topResp.json();
-    if(topData.tracks.length>0) uris.push(topData.tracks[0].uri);
+    if (!resp.ok) throw new Error('Failed to fetch top artists');
+    const data = await resp.json();
+    let uris = [];
+    for(const a of data.items){
+      const topResp = await fetch(`https://api.spotify.com/v1/artists/${a.id}/top-tracks?market=JP`, {
+        headers: { "Authorization": `Bearer ${spotifyToken}` }
+      });
+      const topData = await topResp.json();
+      if(topData.tracks.length > 0) uris.push(topData.tracks[0].uri);
+    }
+    return uris;
+  } catch (error) {
+    console.error('Error fetching top artists tracks:', error);
+    return [];
   }
-  return uris;
 }
 
 // --- プレイリスト作成 ---
 async function createPlaylist(){
-  if(!spotifyToken) return;
+  if(!spotifyToken) {
+    alert("Spotifyへのログインが必要です！");
+    return;
+  }
   
   // ユーザーID取得
   const meResp = await fetch("https://api.spotify.com/v1/me", { headers: { "Authorization": `Bearer ${spotifyToken}` } });
@@ -108,20 +129,22 @@ async function createPlaylist(){
 
   // プレイリスト作成
   const playlistResp = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
-    method:"POST",
-    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type":"application/json" },
+    method: "POST",
+    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       name: `Spotmoodプレイリスト (${new Date().toLocaleDateString()})`,
       description: "Spotmoodが作ったプレイリスト",
-      public:true
+      public: true
     })
   });
+
   const playlistData = await playlistResp.json();
+  console.log('Created playlist data:', playlistData);
 
   // 曲追加
   await fetch(`https://api.spotify.com/v1/playlists/${playlistData.id}/tracks`, {
-    method:"POST",
-    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type":"application/json" },
+    method: "POST",
+    headers: { "Authorization": `Bearer ${spotifyToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({ uris: trackUris })
   });
 
