@@ -17,7 +17,6 @@ function getSpotifyToken() {
 
 let spotifyToken = getSpotifyToken();
 
-
 // surveyDataの初期化
 let surveyData = {
   mood: null,
@@ -30,6 +29,7 @@ let surveyData = {
   playlistLength: { tracks: null, minutes: null },
 };
 
+// --- ページ遷移処理 ---
 // ページ1：気分
 document.getElementById("next1").addEventListener("click", function() {
   const mood = document.querySelector('input[name="mood"]:checked');
@@ -78,10 +78,39 @@ document.getElementById("next6").addEventListener("click", function() {
   document.getElementById("page7").style.display = "block";
 });
 
+// --- Spotify API 関数 ---
+// トップ再生履歴取得
+async function getTopTracks() {
+  if(!spotifyToken) return;
+  const response = await fetch("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+    headers: {
+      "Authorization": `Bearer ${spotifyToken}`
+    }
+  });
+  const data = await response.json();
+  console.log("ユーザーの再生履歴トップ5:", data.items.map(item => item.name + " - " + item.artists[0].name));
+}
+
+// お気に入りアーティスト取得
+async function getTopArtists() {
+  if(!spotifyToken) return;
+  const response = await fetch("https://api.spotify.com/v1/me/top/artists?limit=5", {
+    headers: {
+      "Authorization": `Bearer ${spotifyToken}`
+    }
+  });
+  const data = await response.json();
+  console.log("ユーザーのお気に入りアーティストトップ5:", data.items.map(item => item.name));
+}
+
 // ページ7：プレイリスト長さ
 document.getElementById("finish").addEventListener("click", function() {
   surveyData.playlistLength.tracks = document.getElementById("playlistTracks").value;
   surveyData.playlistLength.minutes = document.getElementById("playlistMinutes").value;
+
+  // Spotify API データ取得
+  if(surveyData.useHistory) getTopTracks();
+  if(surveyData.useFavorites) getTopArtists();
 
   alert("アンケート完了！\n" + JSON.stringify(surveyData));
 });
