@@ -3,7 +3,7 @@ const clientId = "8a2cddf270454c288e7a18a42184a8d4"; // Spotify ダッシュボ�
 const redirectUri = "https://aki2022217.github.io/Spotmood/"; // GitHub Pages URL
 const scopes = "user-top-read user-library-read playlist-modify-public";
 
-// --- アクセストークン取得関数 (Implicit Grant用) ---
+// --- アクセストークン取得関数 (Implicit Grant Flow) ---
 function getSpotifyToken() {
   const hash = window.location.hash;
 
@@ -24,11 +24,12 @@ function getSpotifyToken() {
     return savedToken;
   }
 
-  // それもなければログイン画面へ
+  // 認証画面へ遷移
   const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
   window.location = authUrl;
 }
 
+// --- Spotify トークン取得 ---
 let spotifyToken = getSpotifyToken();
 
 // --- surveyData 初期化 ---
@@ -43,7 +44,7 @@ let surveyData = {
   playlistLength: { tracks: null, minutes: null },
 };
 
-// --- ページ遷移 ---
+// --- ページ遷移関数 ---
 function setupNext(pageId, nextId, name, isMultiple=false) {
   document.getElementById(nextId).addEventListener("click", function() {
     if(name){
