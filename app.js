@@ -6,16 +6,31 @@ const scopes = "user-top-read user-library-read playlist-modify-public";
 // アクセストークン取得関数
 function getSpotifyToken() {
   const hash = window.location.hash;
+
+  // リダイレクト時に hash にトークンが含まれる場合
   if (hash) {
     const params = new URLSearchParams(hash.substring(1));
-    return params.get("access_token");
-  } else {
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-    window.location = authUrl; // 認証画面に飛ぶ
+    const token = params.get("access_token");
+    if (token) {
+      localStorage.setItem("spotify_token", token); // 保存
+      window.location.hash = ""; // URLをきれいにする
+      return token;
+    }
   }
+
+  // すでに保存済みのトークンがあれば使う
+  const savedToken = localStorage.getItem("spotify_token");
+  if (savedToken) {
+    return savedToken;
+  }
+
+  // それもなければログイン画面へ
+  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+  window.location = authUrl;
 }
 
 let spotifyToken = getSpotifyToken();
+
 
 // surveyData 初期化
 let surveyData = {
